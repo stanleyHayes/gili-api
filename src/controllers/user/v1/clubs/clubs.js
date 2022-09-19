@@ -1,0 +1,177 @@
+const clubServices = require("./../../../../services/v1/clubs");
+const memberServices = require("../../../../services/v1/members");
+const invitationServices = require("../../../../services/v1/invitations");
+const Member = require("./../../../../models/v1/member");
+
+exports.createClub = async (req, res) => {
+    try {
+        const {
+            name,
+            token,
+            goal,
+            duration,
+            currency,
+            maximumMemberCount,
+            safeAddress,
+            createdBy
+        } = req.body;
+
+
+        if (!name || !token || !goal || !duration || !maximumMemberCount || !safeAddress || !currency || !createdBy) {
+            return res.status(400).json({message: 'Missing required fields', data: null});
+        }
+
+        const {success} = await clubServices.getClub({token});
+        if (success) {
+            return res.status(409).json({
+                data: null,
+                message: 'Token already taken',
+            });
+        }
+
+        const {data, code, message, success: createClubSuccess} = await clubServices.createClub({
+            name,
+            token,
+            goal,
+            duration,
+            currency,
+            maximumMemberCount,
+            safeAddress,
+            createdBy
+        });
+
+        if (!createClubSuccess) {
+            return res.status(code).json({
+                data: null,
+                message,
+            });
+        }
+
+        res.status(code).json({message, data});
+    } catch (e) {
+        res.status(500).json({message: e.message});
+    }
+}
+
+
+exports.getClub = async (req, res) => {
+    try {
+        const {id} = req.params;
+        const {success, data, code, message} =
+            await clubServices.getClubById(id, {}, {path: 'members'});
+        if (!success) {
+            return res.status(code).json({data, message});
+        }
+        res.status(200).json({message, data});
+    } catch (e) {
+        res.status(500).json({message: e.message});
+    }
+}
+
+
+exports.updateClub = async (req, res) => {
+    try {
+        res.status(200).json({message: 'Club updated Successfully'});
+    } catch (e) {
+        res.status(500).json({message: e.message});
+    }
+}
+
+
+exports.deleteClub = async (req, res) => {
+    try {
+        res.status(200).json({message: 'Club removed Successfully'});
+    } catch (e) {
+        res.status(500).json({message: e.message});
+    }
+}
+
+
+exports.getClubs = async (req, res) => {
+    try {
+        res.status(200).json({message: 'Clubs retrieved Successfully'});
+    } catch (e) {
+        res.status(500).json({message: e.message});
+    }
+}
+
+
+exports.joinClub = async (req, res) => {
+    try {
+        const {amount, address, invitation} = req.body;
+        const {club} = req.params;
+        // check that club exists
+        const findClubResponse = await clubServices.getClub({_id: club});
+        if (!findClubResponse.success) {
+            return res.status(404).json({message: 'Club not found'});
+        }
+
+        const existingMember = await memberServices.findMember({club, address});
+        if(existingMember.success){
+            return res.status(400).json({message: 'Member already belong to the club'});
+        }
+
+        let findInvitationResponse = null;
+
+        const isCreator = address === findClubResponse.data.createdBy;
+        // check that user was really invited
+        if (!isCreator) {
+            findInvitationResponse = await invitationServices.getInvitationById(invitation);
+            if (!findInvitationResponse.success) {
+                return res.status(404).json({message: 'Invitation not found'});
+            }
+
+            if (findInvitationResponse.data.status !== 'Verified') {
+                return res.status(400).json({message: 'Invitation not verified'});
+            }
+
+            if (findInvitationResponse.data.status === 'Used') {
+                return res.status(400).json({message: 'Invitation already used'});
+            }
+
+            findInvitationResponse.data.status = 'Used';
+            await findInvitationResponse.data.save();
+        }
+
+        // find club members
+        const clubMembersResponse = await memberServices.findMembers({club});
+
+        const membersCount = await Member.find({club}).countDocuments();
+
+        // ensure members don't exceed maximum number of allowed members
+        if (membersCount === findClubResponse.data.maximumMemberCount) {
+            return res.status(400).json({message: 'Maximum member count reached'});
+        }
+
+        const treasury = findClubResponse.data.treasury;
+        const goal = findClubResponse.data.goal;
+        const totalTreasury = treasury + amount;
+
+        const members = clubMembersResponse.data;
+
+        // update members stakes and ownerships
+        for (let i = 0; i < members.length; i++) {
+            members[i].ownership = members[i].stake / totalTreasury;
+            await members[i].save();
+        }
+
+        const totalMinted = totalTreasury / goal;
+        const member = {
+            club,
+            role: isCreator ? 'Admin': findInvitationResponse?.data.role,
+            address,
+            ownership: amount / totalTreasury,
+            stake: amount
+        };
+
+        // create a new member
+        const newMember = await memberServices.addMember(member);
+
+        // update club data
+        const update = {...findClubResponse.data, minted: totalMinted, treasury: totalTreasury, invitation};
+        const updatedClub = await clubServices.updateClub(findClubResponse.data._id, update);
+        res.status(200).json({message: 'Joined club successfully', data: updatedClub.data, member: newMember.data})
+    } catch (e) {
+        res.status(500).json({message: e.message});
+    }
+}
