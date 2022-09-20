@@ -7,8 +7,7 @@ const invitationSchema = new mongoose.Schema({
         required: true
     },
     invitee: {
-        type: String,
-        unique: true
+        type: String
     },
     inviter: {
         type: String,
