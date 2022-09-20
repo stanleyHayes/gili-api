@@ -13,8 +13,8 @@ exports.getMembers = async (req, res) => {
 
 exports.getMember = async (req, res) => {
     try {
-        const {id, club} = req.params;
-        const findMemberResponse = await memberServices.findMember({_id: id, club});
+        const {address, club} = req.params;
+        const findMemberResponse = await memberServices.findMember({address, club});
         res.status(findMemberResponse.code).json({message: findMemberResponse.message, data: findMemberResponse.data})
     } catch (e) {
         res.status(500).json({message: e.message});

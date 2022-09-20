@@ -4,6 +4,6 @@ const {getMember, getMembers} = require("../../../controllers/user/v1/members/me
 const router = express.Router({mergeParams: true});
 
 router.route('/').get(getMembers);
-router.route('/:id').get(getMember);
+router.route('/:address').get(getMember);
 
 module.exports = router;
