@@ -73,11 +73,11 @@ exports.depositFunds = async (req, res) => {
     try {
         const {amount, address, club} = req.body;
         const findClubResponse = await clubServices.getClub({_id: club});
-        if(!findClubResponse.success){
+        if (!findClubResponse.success) {
             return res.status(404).json({message: 'Club not found'});
         }
         const clubMemberResponse = await memberServices.findMember({address, _id: club});
-        if(!clubMemberResponse.success){
+        if (!clubMemberResponse.success) {
             return res.status(404).json({message: 'You do not belong to this club'});
         }
 
@@ -92,10 +92,10 @@ exports.depositFunds = async (req, res) => {
 
         // update members stakes and ownerships
         for (let i = 0; i < members.length; i++) {
-            if(address === members[i].address){
+            if (address === members[i].address) {
                 members[i].stake = members[i].stake + amount;
                 members[i].ownership = members[i].stake / totalTreasury;
-            }else{
+            } else {
                 members[i].ownership = members[i].stake / totalTreasury;
             }
             await members[i].save();
@@ -106,9 +106,13 @@ exports.depositFunds = async (req, res) => {
         // update club data
         const update = {...findClubResponse.data, minted: totalMinted, treasury: totalTreasury};
         const updatedClub = await clubServices.updateClub(findClubResponse.data._id, update);
-        res.status(200).json({message: 'Deposit successfully recorded', data: updatedClub.data, member: updatedMemberResponse.data})
+        res.status(200).json({
+            message: 'Deposit successfully recorded',
+            data: updatedClub.data,
+            member: updatedMemberResponse.data
+        })
 
-    }catch (e) {
+    } catch (e) {
         res.status(500).json({message: e.message});
     }
 }
@@ -131,7 +135,29 @@ exports.getClubBySafe = async (req, res) => {
 
 exports.updateClub = async (req, res) => {
     try {
-        res.status(200).json({message: 'Club updated Successfully'});
+        const {id} = req.params;
+        const {address} = req.body;
+        const findClubResponse = await clubServices.getClub({_id: id});
+        if (!findClubResponse.success) {
+            return res.status(404).json({message: 'Club not found'});
+        }
+        const findClubMemberResponse = await memberServices.findMember({address, club: id});
+        if (!findClubMemberResponse.success) {
+            return res.status(404).json({message: 'You are not a member of ths club'});
+        }
+        if (findClubMemberResponse.data.role !== 'Admin') {
+            return res.status(401).json({message: 'You are not authorized to perform this operation'});
+        }
+        delete req.body['address'];
+        const updatedClubResponse = await clubServices.updateClub(id, req.body);
+        if (!updatedClubResponse.success) {
+            return res.status(400).json({message: 'Something went wrong'});
+        }
+        res.status(200).json({
+            message: 'Club updated Successfully',
+            data: updatedClubResponse.data,
+            member: findClubMemberResponse.data
+        });
     } catch (e) {
         res.status(500).json({message: e.message});
     }
@@ -167,7 +193,7 @@ exports.joinClub = async (req, res) => {
         }
 
         const existingMember = await memberServices.findMember({club, address});
-        if(existingMember.success){
+        if (existingMember.success) {
             return res.status(400).json({message: 'Member already belong to the club'});
         }
 
@@ -218,7 +244,7 @@ exports.joinClub = async (req, res) => {
         const totalMinted = totalTreasury / goal;
         const member = {
             club,
-            role: isCreator ? 'Admin': findInvitationResponse?.data.role,
+            role: isCreator ? 'Admin' : findInvitationResponse?.data.role,
             address,
             ownership: amount / totalTreasury,
             stake: amount
