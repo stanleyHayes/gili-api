@@ -8,7 +8,7 @@ router.use('/:club/members', membersRoute);
 router.route('/').post(createClub).get(getClubs);
 router.route('/:id').get(getClub).put(updateClub).delete(deleteClub);
 router.route('/:club/join').post(joinClub);
-router.route('/:club/deposit').post(depositFunds);
+router.route('/:club/deposit').put(depositFunds);
 router.route('/:address/safe').get(getClubBySafe);
 
 module.exports = router;
