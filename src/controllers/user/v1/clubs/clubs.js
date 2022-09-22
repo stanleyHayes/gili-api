@@ -231,7 +231,7 @@ exports.joinClub = async (req, res) => {
 
         const treasury = findClubResponse.data.treasury;
         const goal = findClubResponse.data.goal;
-        const totalTreasury = treasury + amount;
+        const totalTreasury = treasury + parseFloat(amount);
 
         const members = clubMembersResponse.data;
 
@@ -246,8 +246,8 @@ exports.joinClub = async (req, res) => {
             club,
             role: isCreator ? 'Admin' : findInvitationResponse?.data.role,
             address,
-            ownership: amount / totalTreasury,
-            stake: amount
+            ownership: parseFloat(amount) / totalTreasury,
+            stake: parseFloat(amount)
         };
 
         // create a new member

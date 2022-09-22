@@ -5,7 +5,7 @@ exports.createInvitation = async (invitation) => {
     if(!createdInvitation){
         return {success: false, code: 400, message: 'Something went wrong', data: null};
     }
-    return {data: createdInvitation, success: true, code: 201, message: 'Message created Successfully'};
+    return {data: createdInvitation, success: true, code: 201, message: 'Invitation created Successfully'};
 }
 
 exports.getInvitation = async (query) => {

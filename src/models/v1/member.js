@@ -23,8 +23,7 @@ const memberSchema = new mongoose.Schema({
     },
     address: {
         type: String,
-        required: true,
-        unique: [true, 'Member already exist in group']
+        required: true
     },
     invitation: {
         type: mongoose.Schema.Types.ObjectId,

@@ -7,7 +7,6 @@ const memberServices = require("./../../../../services/v1/members");
 exports.createInvitation = async (req, res) => {
     try {
         const {role, club, inviter} = req.body;
-
         // check that club exists
         const {success} = await clubServices.getClub({_id: club});
         if (!success) return res.status(404).json({message: 'Club not found'});
