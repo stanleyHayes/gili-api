@@ -175,7 +175,15 @@ exports.deleteClub = async (req, res) => {
 
 exports.getClubs = async (req, res) => {
     try {
-        res.status(200).json({message: 'Clubs retrieved Successfully'});
+        const {address} = req.params;
+        const findClubsResponse = await memberServices.findMembers({address});
+        const clubs = [];
+        for (let i = 0; i < findClubsResponse.data.length; i++) {
+            const club = findClubsResponse.data[i].club;
+            const findClubResponse = await clubServices.getClubById(club, {}, {path: 'members'});
+            clubs.push(findClubResponse.data);
+        }
+        res.status(200).json({message: 'Clubs retrieved Successfully', data: clubs});
     } catch (e) {
         res.status(500).json({message: e.message});
     }

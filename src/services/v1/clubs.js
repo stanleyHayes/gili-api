@@ -11,7 +11,7 @@ exports.createClub = async (club) => {
 exports.updateClub = async (id, club) => {
     try {
         const foundClub = await Club.findById(id);
-        for(let key in club){
+        for (let key in club) {
             foundClub[key] = club[key];
         }
         const updatedClub = await foundClub.save();
@@ -40,6 +40,11 @@ exports.getClub = async (query) => {
         code: 404,
         message: 'Club Not Found'
     };
+}
+
+exports.getClubs = async (query) => {
+    const clubs = await Club.find(query);
+    return {data: clubs, success: true, code: 200, message: 'Clubs Retrieved Successfully'};
 }
 
 

@@ -25,7 +25,7 @@ exports.findMember = async (query) => {
 }
 
 
-exports.findMembers = async (query) => {
-    const members = await Member.find(query);
+exports.findMembers = async (query, projection, populate) => {
+    const members = await Member.find(query).populate(populate);
     return {code: 200, data: members, success: true, message: 'Member retrieved'};
 }

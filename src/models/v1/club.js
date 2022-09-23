@@ -68,9 +68,10 @@ const clubSchema = new mongoose.Schema({
 });
 
 clubSchema.virtual('members', {
-    localField: 'safeAddress',
+    localField: '_id',
     foreignField: 'club',
-    justOne: false
+    justOne: false,
+    ref: 'Member'
 })
 
 const Club = mongoose.model('Club', clubSchema);
