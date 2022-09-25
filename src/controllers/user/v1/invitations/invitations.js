@@ -40,7 +40,7 @@ exports.verifyInvitation = async (req, res) => {
         const {id} = req.params;
 
         // check if invitation exists
-        const findInvitationResponse = await invitationServices.getInvitation({_id: id});
+        const findInvitationResponse = await invitationServices.getInvitation({_id: id}, {path: 'club'});
         if (!findInvitationResponse.success) {
             return res.status(findInvitationResponse.code).json({
                 message: findInvitationResponse.message, data: findInvitationResponse.data

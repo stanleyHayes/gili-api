@@ -222,9 +222,6 @@ exports.joinClub = async (req, res) => {
             if (findInvitationResponse.data.status === 'Used') {
                 return res.status(400).json({message: 'Invitation already used'});
             }
-
-            findInvitationResponse.data.status = 'Used';
-            await findInvitationResponse.data.save();
         }
 
         // find club members
@@ -264,6 +261,11 @@ exports.joinClub = async (req, res) => {
         // update club data
         const update = {...findClubResponse.data, minted: totalMinted, treasury: totalTreasury, invitation};
         const updatedClub = await clubServices.updateClub(findClubResponse.data._id, update);
+
+        if(findInvitationResponse){
+            findInvitationResponse.data.status = 'Used';
+            await findInvitationResponse.data.save();
+        }
         res.status(200).json({message: 'Joined club successfully', data: updatedClub.data, member: newMember.data});
     } catch (e) {
         res.status(500).json({message: e.message});

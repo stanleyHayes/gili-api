@@ -8,8 +8,8 @@ exports.createInvitation = async (invitation) => {
     return {data: createdInvitation, success: true, code: 201, message: 'Invitation created Successfully'};
 }
 
-exports.getInvitation = async (query) => {
-    const invitation = await Invitation.findOne(query);
+exports.getInvitation = async (query, populate) => {
+    const invitation = await Invitation.findOne(query).populate(populate);
     if(!invitation){
         return {data: null, code: 404, success: false, message: 'Invitation not found'};
     }
