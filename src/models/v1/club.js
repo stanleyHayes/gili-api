@@ -61,6 +61,10 @@ const clubSchema = new mongoose.Schema({
         type: String,
         enum: ['Active'],
         default: 'Active'
+    },
+    network: {
+        type: String,
+        required: true
     }
 }, {timestamps: {createdAt: true, updatedAt: true},
     toJSON: {virtuals: true},

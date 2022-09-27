@@ -22,7 +22,7 @@ const invitationSchema = new mongoose.Schema({
         type: String,
         enum: ['Pending', 'Used', 'Expired', 'Verified'],
         default: 'Pending'
-    }
+    },
 }, {
     timestamps: {createdAt: true, updatedAt: true},
     toJSON: {virtuals: true},

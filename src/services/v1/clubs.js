@@ -29,8 +29,8 @@ exports.getClubById = async (id, projection, populate) => {
     return {data: null, success: false, code: 404, message: 'Club not found'};
 }
 
-exports.getClub = async (query) => {
-    const club = await Club.findOne(query);
+exports.getClub = async (query, populate) => {
+    const club = await Club.findOne(query).populate(populate);
     if (club) {
         return {data: club, success: true, code: 200, message: 'Club Retrieved Successfully'};
     }

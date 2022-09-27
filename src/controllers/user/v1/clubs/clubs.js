@@ -13,11 +13,12 @@ exports.createClub = async (req, res) => {
             currency,
             maximumMemberCount,
             safeAddress,
-            createdBy
+            createdBy,
+            network
         } = req.body;
 
 
-        if (!name || !token || !goal || !duration || !maximumMemberCount || !safeAddress || !currency || !createdBy) {
+        if (!name || !token || !goal || !duration || !maximumMemberCount || !safeAddress || !currency || !createdBy || !network) {
             return res.status(400).json({message: 'Missing required fields', data: null});
         }
 
@@ -37,7 +38,8 @@ exports.createClub = async (req, res) => {
             currency,
             maximumMemberCount,
             safeAddress,
-            createdBy
+            createdBy,
+            network
         });
 
         if (!createClubSuccess) {
@@ -46,7 +48,6 @@ exports.createClub = async (req, res) => {
                 message,
             });
         }
-
         res.status(code).json({message, data});
     } catch (e) {
         res.status(500).json({message: e.message});
@@ -262,11 +263,65 @@ exports.joinClub = async (req, res) => {
         const update = {...findClubResponse.data, minted: totalMinted, treasury: totalTreasury, invitation};
         const updatedClub = await clubServices.updateClub(findClubResponse.data._id, update);
 
-        if(findInvitationResponse){
+        if (findInvitationResponse) {
             findInvitationResponse.data.status = 'Used';
             await findInvitationResponse.data.save();
         }
         res.status(200).json({message: 'Joined club successfully', data: updatedClub.data, member: newMember.data});
+    } catch (e) {
+        res.status(500).json({message: e.message});
+    }
+}
+
+
+exports.addMember = async (req, res) => {
+    try {
+        const {address, role, admin} = req.body;
+        const {club} = req.params;
+        // check that club exists
+        const findClubResponse = await clubServices.getClub({_id: club}, {path: 'members'});
+        if (!findClubResponse.success) {
+            return res.status(404).json({message: 'Club not found'});
+        }
+
+        const findAdminResponse = await memberServices.findMember({club, admin});
+        if (!findAdminResponse.success) {
+            return res.status(400).json({message: 'You are not a member of this club'});
+        }
+
+        if (findAdminResponse.data.role !== 'Admin') {
+            return res.status(400).json({message: 'You are not allowed to perform this operation'});
+        }
+
+        const existingMember = await memberServices.findMember({club, address});
+        if (existingMember.success) {
+            return res.status(400).json({message: 'Member already belong to the club'});
+        }
+
+        const membersCount = await Member.find({club}).countDocuments();
+
+        // ensure members don't exceed maximum number of allowed members
+        if (membersCount === findClubResponse?.data?.maximumMemberCount) {
+            return res.status(400).json({message: 'Maximum member count reached'});
+        }
+
+
+        const member = {
+            club,
+            role,
+            address,
+            ownership: 0,
+            stake: 0
+        };
+
+        // create a new member
+        const newMember = await memberServices.addMember(member);
+
+        res.status(200).json({
+            message: 'Added member to club successfully',
+            data: findClubResponse.data,
+            member: newMember.data
+        });
     } catch (e) {
         res.status(500).json({message: e.message});
     }
