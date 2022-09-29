@@ -203,7 +203,7 @@ exports.joinClub = async (req, res) => {
 
         const existingMember = await memberServices.findMember({club, address});
         if (existingMember.success) {
-            return res.status(400).json({message: 'Member already belong to the club'});
+            return res.status(200).json({message: 'Member already belong to the club', data: findClubResponse.data, member: existingMember.data});
         }
 
         let findInvitationResponse = null;
@@ -246,7 +246,6 @@ exports.joinClub = async (req, res) => {
             members[i].ownership = members[i].stake / totalTreasury;
             await members[i].save();
         }
-
         const totalMinted = totalTreasury / goal;
         const member = {
             club,
@@ -269,6 +268,7 @@ exports.joinClub = async (req, res) => {
         }
         res.status(200).json({message: 'Joined club successfully', data: updatedClub.data, member: newMember.data});
     } catch (e) {
+        console.log(e.message);
         res.status(500).json({message: e.message});
     }
 }

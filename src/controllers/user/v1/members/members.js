@@ -14,7 +14,9 @@ exports.getMembers = async (req, res) => {
 exports.getMember = async (req, res) => {
     try {
         const {address, club} = req.params;
+        console.log(address, club)
         const findMemberResponse = await memberServices.findMember({address, club});
+        console.log(findMemberResponse.data)
         res.status(findMemberResponse.code).json({message: findMemberResponse.message, data: findMemberResponse.data})
     } catch (e) {
         res.status(500).json({message: e.message});
