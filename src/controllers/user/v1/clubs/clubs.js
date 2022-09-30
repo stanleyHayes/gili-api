@@ -77,7 +77,7 @@ exports.depositFunds = async (req, res) => {
         if (!findClubResponse.success) {
             return res.status(404).json({message: 'Club not found'});
         }
-        const clubMemberResponse = await memberServices.findMember({address, _id: club});
+        const clubMemberResponse = await memberServices.findMember({address, club});
         if (!clubMemberResponse.success) {
             return res.status(404).json({message: 'You do not belong to this club'});
         }

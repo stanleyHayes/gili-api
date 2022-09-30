@@ -18,7 +18,7 @@ router.route('/').post(createClub).get(getClubs);
 router.route('/:id').get(getClub).put(updateClub).delete(deleteClub);
 router.route('/:club/join').post(joinClub);
 router.route('/:club/member/add').post(addMember);
-router.route('/:club/deposit').put(depositFunds);
+router.route('/:club/funds/deposit').put(depositFunds);
 router.route('/:address/safe').get(getClubBySafe);
 
 module.exports = router;
