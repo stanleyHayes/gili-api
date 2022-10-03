@@ -9,8 +9,7 @@ const clubSchema = new mongoose.Schema({
     token: {
         type: String,
         required: true,
-        trim: true,
-        unique: true
+        trim: true
     },
     createdBy: {
         type: String,
