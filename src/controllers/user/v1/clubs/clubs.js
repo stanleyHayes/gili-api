@@ -22,14 +22,6 @@ exports.createClub = async (req, res) => {
             return res.status(400).json({message: 'Missing required fields', data: null});
         }
 
-        const {success} = await clubServices.getClub({token});
-        if (success) {
-            return res.status(409).json({
-                data: null,
-                message: 'Token already taken',
-            });
-        }
-
         const {data, code, message, success: createClubSuccess} = await clubServices.createClub({
             name,
             token,
